@@ -1,6 +1,6 @@
 var TodoList = React.createClass({
   getInitialState: function () {
-    return { todos: TodoStore.all() } ;
+    return { todos: TodoStore.all()} ;
   },
 
   render: function () {
@@ -28,6 +28,14 @@ var TodoList = React.createClass({
 });
 
 var TodoListItem = React.createClass({
+  getInitialState: function () {
+    return { displayed: false };
+  },
+
+  toggleDisplay: function () {
+    this.setState({ displayed: !this.state.displayed });
+  },
+
   handleDestroy: function () {
     TodoStore.destroy(this.props.todo.id);
   },
@@ -35,26 +43,24 @@ var TodoListItem = React.createClass({
   render: function () {
     return (
       <div>
-        <div>{this.props.todo.title}</div>
-        <DoneButton todo={this.props.todo} />
-        <TodoDetailView destroy={this.handleDestroy} todo={this.props.todo} />
+        <div onClick={this.toggleDisplay}>{this.props.todo.title}</div>
+        <DoneButton item={this.props.todo} />
+        <TodoDetailView destroy={this.handleDestroy} todo={this.props.todo} displayed={this.state.displayed}/>
       </div>
     );
   }
 });
 
 var TodoDetailView = React.createClass({
-  getInitialState: function () {
-    return { displayed: false };
-  },
-
   render: function () {
-    return (
+    var details = (
       <div>
-        <div> • {this.props.todo.body}</div>
+        <div>{this.props.todo.body}</div>
         <button onClick={this.props.destroy}>Delete</button>
+        <TodoSteps todo={this.props.todo}/>
       </div>
     );
+    return (this.props.displayed ? details : <div></div>);
   }
 });
 
@@ -95,12 +101,71 @@ var TodoForm = React.createClass({
 
 var DoneButton = React.createClass({
   handleDone: function () {
-    TodoStore.toggleDone(this.props.todo.id);
+    TodoStore.toggleDone(this.props.item.id);
   },
 
   render: function () {
     return (
-      <button onClick={this.handleDone}>{this.props.todo.done ? "Undo" : "Done" }</button>
+      <button onClick={this.handleDone}>{this.props.item.done ? "Undo" : "Done" }</button>
+    );
+  }
+});
+
+var TodoSteps = React.createClass({
+  getInitialState: function () {
+    return { steps: [], words: "fak" };
+  },
+
+  stepsChanged: function () {
+    this.setState({ steps: StepStore.all(this.props.todo.id) });
+  },
+
+  componentDidMount: function () {
+    StepStore.addChangeHandler(this.stepsChanged);
+    StepStore.fetch();
+  },
+
+  componentWillUnmount: function () {
+    StepStore.removeChangeHandler(this.stepsChanged);
+  },
+
+  handleChange: function (e) {
+    this.setState({ words: e.currentTarget.value });
+  },
+
+  handleSubmit: function (e) {
+    e.preventDefault();
+    var stepObj = { words: this.state.words, todoId: this.props.todo.id };
+    debugger;
+    StepStore.create(stepObj);
+    this.setState({ words: "" });
+  },
+
+  handleDestroy: function () {
+    StepStore.destroy(this.state.steps);
+  },
+
+  render: function () {
+    return(
+      <ul>
+        {
+          this.state.steps.map(function (step, idx) {
+            return (
+              <li key={idx}>
+                <div>{step.words}</div>
+                <DoneButton item={step} />
+                <button onClick={this.handleDestroy}>X</button>
+              </li>
+            );
+          }.bind(this))
+        }
+        <form onSubmit={this.handleSubmit}>
+          <label>New Step
+            <input type="text" value={this.state.words} onChange={this.handleChange}/>
+            <button>Add Step</button>
+          </label>
+        </form>
+      </ul>
     );
   }
 });
