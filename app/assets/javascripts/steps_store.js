@@ -44,6 +44,7 @@
       data: {step: step},
       success: function (data) {
         // debugger;
+        _steps[todoId] = (_steps[todoId] ? _steps[todoId] : []);
         _steps[step.todoId].push(data);
         StepStore.changed();
       },
@@ -52,8 +53,9 @@
   };
 
   StepStore.destroy = function (id) {
+    debugger;
     var step = StepStore.find(id);
-    var todoId = step.todoId;
+    var todoId = step.todo_id;
     if (step) {
       $.ajax({
         url: '/api/steps/' + id,
@@ -73,11 +75,12 @@
     var allSteps = [];
     var match;
     for (var key in _steps) {
-      allSteps.concat(_steps[key]);
+      allSteps = allSteps.concat(_steps[key]);
     }
     allSteps.forEach(function (step) {
-      match = (step.id === id ? step : null);
-      if (match) { return match; }
+      if (!match) {
+        match = (step.id === id ? step : null);
+      }
     });
     return match;
   };

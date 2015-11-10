@@ -122,7 +122,7 @@ var TodoSteps = React.createClass({
 
   componentDidMount: function () {
     StepStore.addChangeHandler(this.stepsChanged);
-    StepStore.fetch();
+    StepStore.fetch(this.props.todo.id);
   },
 
   componentWillUnmount: function () {
@@ -141,8 +141,8 @@ var TodoSteps = React.createClass({
     this.setState({ words: "" });
   },
 
-  handleDestroy: function () {
-    StepStore.destroy(this.state.steps);
+  handleDestroy: function (e) {
+    StepStore.destroy(parseInt(e.currentTarget.id));
   },
 
   render: function () {
@@ -151,10 +151,10 @@ var TodoSteps = React.createClass({
         {
           this.state.steps.map(function (step, idx) {
             return (
-              <li key={idx}>
+              <li key={step.id}>
                 <div>{step.words}</div>
                 <DoneButton item={step} />
-                <button onClick={this.handleDestroy}>X</button>
+                <button id={step.id} onClick={this.handleDestroy}>X</button>
               </li>
             );
           }.bind(this))

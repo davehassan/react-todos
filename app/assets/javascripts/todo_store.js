@@ -70,8 +70,9 @@
   TodoStore.find = function (id) {
     var match;
     _todos.forEach(function (todo) {
+      if (!match) {
       match = (todo.id === id ? todo : null);
-      if (match) { return match; }
+      }
     });
     return match;
   };
